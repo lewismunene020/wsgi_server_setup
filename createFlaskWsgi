@@ -1,0 +1,53 @@
+#!/bin/bash
+
+
+
+# pip install uwsgi
+GREEN='\033[1;32m'
+RED='\033[1;31m'
+user="$(whoami)";
+if [[ $user == "root" ]] ;then
+        PATH_TO_DIR=$PWD;
+        DIR_NAME="$(basename "$PWD")" #EXTRACTS  THE CURRENT  FOLDER NAME FROM  PWD ENVIRONMENT VARIABLE
+        DOMAIN_NAME="$1"
+
+        # CREATING  project.ini file  now 
+            PROJECT_INI_DATA="$(python3 /usr/local/share/createFlaskWsgi/project_ini.py "$PATH_TO_DIR")"
+            echo -e "$PROJECT_INI_DATA" > project.ini #  and adding contents to  project.ini file
+        #
+        #CREATING  project.service  in /etc/systemd/system using the folder name
+            PROJECT_SERVICE_DATA="$(python3 /usr/local/share/createFlaskWsgi/project_service.py "$PATH_TO_DIR")"
+            touch /etc/systemd/system/"$DIR_NAME".service
+
+        # APPENDING THE "service data" CONTENT  TO THE .service file
+            echo -e "$PROJECT_SERVICE_DATA"  > /etc/systemd/system/"$DIR_NAME".service
+
+        #ENABLING THE SERVICE AND STARTING IT 
+            systemctl daemon-reload    # RELOADING TH DAEMON UNITS DUE TO  CHANGE IN service units
+            systemctl enable "$DIR_NAME".service
+            systemctl start "$DIR_NAME".service
+            # systemctl status "$DIR_NAME".service
+
+        #CREATING NGINX SERVER BLOCK 
+            NGINX_SERVER_BLOCK="$(python3 /usr/local/share/createFlaskWsgi/set_nginx_server.py "$PATH_TO_DIR" "$DOMAIN_NAME")";
+
+            #WHAT ABOUT A SCRIPT THAT CHECKS IF  THE SERVER BLOCK EXISTS IN THE NGINX CONFIGURATION
+            #THAT PYTHON SCRIPT SHOULD EXIST TO AVOID DUPLICATE SERVERT BLOCKS
+
+
+        #APPENDING TO THE END OF THE SERVER BLOCK 
+            echo -e "$NGINX_SERVER_BLOCK" >> /etc/nginx/sites-enabled/hosting-config;
+            systemctl daemon-reload    # RELOADING TH DAEMON UNITS DUE TO  CHANGE IN service units
+            systemctl restart "$DIR_NAME".service
+            nginx -s reload #restarting nginx configuration
+
+        # PROCESS COMPLETE
+        echo -e  "$GREEN flask nginx wsgi server complete";
+
+
+
+
+else
+    echo -e  "$RED you must be root to run this script";
+
+fi
