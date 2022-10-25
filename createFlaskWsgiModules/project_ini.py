@@ -10,7 +10,7 @@ def  makeProjectIni(directory):
     data+="socket =  project.sock \\nchmod-socket = 660 \\n"
     data+="vacuum = true\\n"
     data+="die-on-term = true\\n"
-    data+="logto = "+directory+ "/project.log"
+    data+="logto = /home/lewis/logs/"+directory+".log"
     return data
 
 print(makeProjectIni(argv[1]))
