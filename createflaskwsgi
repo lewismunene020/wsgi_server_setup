@@ -11,6 +11,7 @@ if [[ $user == "root" ]] ;then
         DIR_NAME="$(basename "$PWD")" #EXTRACTS  THE CURRENT  FOLDER NAME FROM  PWD ENVIRONMENT VARIABLE
         DOMAIN_NAME="$1"
 
+
         # CREATING  project.ini file  now 
             PROJECT_INI_DATA="$(python3 /usr/local/share/createFlaskWsgi/project_ini.py "$PATH_TO_DIR")"
             echo -e "$PROJECT_INI_DATA" > project.ini #  and adding contents to  project.ini file
@@ -34,9 +35,11 @@ if [[ $user == "root" ]] ;then
             #WHAT ABOUT A SCRIPT THAT CHECKS IF  THE SERVER BLOCK EXISTS IN THE NGINX CONFIGURATION
             #THAT PYTHON SCRIPT SHOULD EXIST TO AVOID DUPLICATE SERVERT BLOCKS
 
+        # creating  the configuration file for nginx 
+        touch "$DOMAIN_NAME".conf # creating  the configuration file for nginx
 
         #APPENDING TO THE END OF THE SERVER BLOCK 
-            echo -e "$NGINX_SERVER_BLOCK" >> /etc/nginx/sites-enabled/hosting-config;
+            echo -e "$NGINX_SERVER_BLOCK" >> /etc/nginx/conf.d/"$DOMAIN_NAME".conf;
             systemctl daemon-reload    # RELOADING TH DAEMON UNITS DUE TO  CHANGE IN service units
             systemctl restart "$DIR_NAME".service
             nginx -s reload #restarting nginx configuration
